@@ -1,0 +1,46 @@
+<?php
+// VertcoinPlugin by Pootis Network
+// this is the settings file. most of the changes you need to make can be done here and will apply to all the gameservers this instance is attached to.
+
+// -- Gameserver Management --
+
+// server api key
+//  used to communicate with the API to award points/crypto on actions. DO NOT SHARE! MAKE THIS A REALLY SECURE KEY.
+define("GAMESERVER_KEY", "");
+
+// points value
+//  used to define a value of a point of the crypto in the currency set below (adjust this often)
+define("GAMESERVER_POINT_VALUE", 0.00000001);
+
+// ---------------------------
+
+
+// -- Coinpayments API Keys --
+//   You will need to obtain the public/private keys of the API with spending/sending enabled.
+//   DO NOT SHARE THESE.
+
+// currency to use on coinpayments (default = "usd")
+define("COINPAYMENTS_CURRENCY", "USD");
+
+define("COINPAYMENTS_API_PRIVATEKEY",  "" );
+define("COINPAYMENTS_API_PUBLICKEY",  "" );
+// you can grab your Merchant ID (not private/public api key) at
+//   https://www.coinpayments.net/acct-settings
+define("COINPAYMENTS_API_MERCHANTID",  "" );
+// -----------------------------
+
+
+
+// -- SQL Settings --
+//  Please have a secure SQL config or i will lose my mind.
+
+define("SQLServer", "Your SQL Server IP/Domain Here");
+define("SQLDatabase", "Your SQL Database Name Here");
+
+define("SQLUsername", "Your SQL Server username Here");
+define("SQLPassword", "Your SQL Server Password Here");
+
+
+// In most cases, you do not need to touch this value.
+define("SQLServerPort", 3306);
+// -----------------------------
