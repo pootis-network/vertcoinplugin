@@ -1,8 +1,8 @@
-#Vertcoin plugin
+# Vertcoin plugin
 plugin to add Vertcoin rewards to various games.
 
 powered by PHP and mySQL alongside the coinPayments api.
-#supported games (planned):
+# supported games (planned):
 Unreal Tournament 1999
 
 Garry's Mod
