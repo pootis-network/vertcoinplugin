@@ -5,6 +5,7 @@ include('config.php');
 ini_set('log_errors', true);
 ini_set('error_log', getcwd().'/server_errors.log');
 error_reporting(E_ALL);
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 // prevent hacker people from reading file
 function requirePostMethod() {
@@ -34,11 +35,17 @@ if (!isset($_POST['gameserver_key']) || empty($_POST['gameserver_key'])) {
     errorAndDie('No Gameserver Key sent.');
 }
 
+if ($gameserver_key != $_POST['gameserver_key']){
+    errorAndDie('Incorrect Gameserver key sent');
+}
 
 // POST Data
 $username = $_POST['username'];
 $password = $_POST['password'];
-
+$wallet = $_POST['wallet'];
+if (isset($_POST['points'])){
+    $points = $_POST['points'];
+}
 
 // create account
 if ($_POST['action'] == 'register') {
@@ -53,17 +60,17 @@ if ($_POST['action'] == 'register') {
 
     // In case players database doesnt exist (ie wasnt imported), make it.
     $query = "CREATE TABLE IF NOT EXISTS players (  
-		username varchar(1024) NOT NULL, 
-		password varchar(2048) NOT NULL, 
+		user varchar(1024) NOT NULL, 
+		pass varchar(2048) NOT NULL, 
 		coin varchar(1024) default 'vertcoin' NOT NULL,
 		coin_address varchar(2048) NOT NULL, 
 		points int default 0 NOT NULL, 
-		UNIQUE KEY username (username))";
+		UNIQUE KEY user (user))";
     mysqli_query($link, $query);
 
 
     // Check if username already in database
-    $query = "SELECT * FROM players WHERE username=?";
+    $query = "SELECT * FROM players WHERE user=?";
     $stmt = mysqli_stmt_init($link);
     if (mysqli_stmt_prepare($stmt, $query)) {
         mysqli_stmt_bind_param($stmt, "s", $username);
@@ -80,7 +87,7 @@ if ($_POST['action'] == 'register') {
 
     // todo:fix this
     // add user to database
-    $register_query = "INSERT INTO 'players' ( username, password)";
+    $register_query = "INSERT INTO players ( user, pass) VALUES ( ?,?)";
     $register_stmt = mysqli_stmt_init($link);
     if (mysqli_stmt_prepare($register_stmt,$register_query)){
         $passwordHashed = password_hash($password, PASSWORD_BCRYPT);
@@ -95,7 +102,7 @@ if ($_POST['action'] == 'register') {
     mysqli_close($link);
 }
 
-// login account
+// login account and edit wallet
 if ($_POST['action'] == 'editWallet') {
     // Connect to database
     $link = mysqli_connect(SQLServer, SQLUsername, SQLPassword, SQLDatabase);
@@ -105,7 +112,7 @@ if ($_POST['action'] == 'editWallet') {
     }
 
     //check if account exists
-    $query = "SELECT * FROM players WHERE username=?";
+    $query = "SELECT * FROM players WHERE user=?";
     $stmt = mysqli_stmt_init($link);
     if (mysqli_stmt_prepare($stmt, $query)) {
         mysqli_stmt_bind_param($stmt, "s", $username);
@@ -120,21 +127,49 @@ if ($_POST['action'] == 'editWallet') {
     mysqli_stmt_close($stmt);
 
     // check if same password
-    $query_password = "SELECT  username, password FROM players WHERE username=?";
+    $query_password = "SELECT  user, pass FROM players WHERE user=?";
     $stmt = mysqli_stmt_init($link);
-    if (mysqli_stmt_prepare($stmt, $query)) {
+    if (mysqli_stmt_prepare($stmt, $query_password)) {
         mysqli_stmt_bind_param($stmt, "s", $username);
         mysqli_stmt_execute($stmt);
+
+        // bind shit to variables
+        mysqli_stmt_bind_result($stmt, $usrname, $pw);
+
         $User = mysqli_stmt_fetch($stmt);
+
     }
     mysqli_stmt_close($stmt);
 
-    $validPassword = password_verify($password, $User['password']);
+    $validPassword = password_verify($password, $pw);
     if($validPassword){
         //All is good. Edit the wallet.
-        mysqli_stmt_close($stmt);
+
+        // prepare the query.
+        $query_edit = "UPDATE players SET coin_address = ? WHERE players.user = ?";
+
+        $wallet_stmt = mysqli_stmt_init($link);
+        if (mysqli_stmt_prepare($wallet_stmt, $query_edit)) {
+            mysqli_stmt_bind_param($wallet_stmt, "ss",$wallet, $username);
+            mysqli_stmt_execute($wallet_stmt);
+        }
+        mysqli_stmt_close($wallet_stmt);
+
         mysqli_close($link);
         die("Successfully Edited Wallet");
         exit(0);
+    }else {
+        mysqli_close($link);
+        die("Invalid Account Details");
+        exit(0);
     }
+}
+
+// add points to account
+if ($_POST['action'] == 'addPoints') {
+
+}
+// remove points to account
+if ($_POST['action'] == 'removePoints') {
+
 }

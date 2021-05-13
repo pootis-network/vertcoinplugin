@@ -44,3 +44,10 @@ define("SQLPassword", "Your SQL Server Password Here");
 // In most cases, you do not need to touch this value.
 define("SQLServerPort", 3306);
 // -----------------------------
+
+// variable management - do not touch
+$cp_merchant_id = COINPAYMENTS_API_MERCHANTID;
+$cp_ipn_secret = COINPAYMENTS_API_PRIVATEKEY;
+$cp_ipn_public = COINPAYMENTS_API_PUBLICKEY;
+
+$gameserver_key = GAMESERVER_KEY;
