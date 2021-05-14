@@ -26,8 +26,10 @@ $points
 
 $action will tell the server what your plugin what it wants to do (ie sign up or edit an address or something.)
 valid functions are:
-sign up (requires $username and $password)
-edit wallet (requires $username and $password and $wallet)
 
-add points (requires $username and $points)
-removepoints (requires $username and $points)
+register (requires $username and $password)
+
+editWallet (requires $username and $password and $wallet)
+
+addPoints (requires $username and $points)
+removePoints (requires $username and $points)
