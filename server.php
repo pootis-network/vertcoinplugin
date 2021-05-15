@@ -220,6 +220,8 @@ if ($_POST['action'] == 'login') {
 
 }
 
+
+// todo: fix this dumb broken shit
 // add points to account
 if ($_POST['action'] == 'addPoints') {
     // Connect to database
@@ -278,4 +280,122 @@ if ($_POST['action'] == 'addPoints') {
 // remove points to account
 if ($_POST['action'] == 'removePoints') {
 
+}
+
+// get balance of account
+if ($_POST['action'] == 'getBalance') {
+    // Connect to database
+    $link = mysqli_connect(SQLServer, SQLUsername, SQLPassword, SQLDatabase);
+    if (!$link) {
+        error_log("Failed to connect to the database: " . mysqli_connect_error());
+        exit(0);
+    }
+
+    // In case players database doesnt exist (ie wasnt imported), make it.
+    $query = "CREATE TABLE IF NOT EXISTS players (  
+		user varchar(1000) NOT NULL, 
+		pass varchar(1000) NOT NULL, 
+		coin varchar(1000) default 'vertcoin' NOT NULL,
+		coin_address varchar(1000) NOT NULL, 
+		points int default 0 NOT NULL, 
+		UNIQUE KEY user (user))";
+    mysqli_query($link, $query);
+
+
+    //check if account exists
+    $query = "SELECT * FROM players WHERE user=?";
+    $stmt = mysqli_stmt_init($link);
+    if (mysqli_stmt_prepare($stmt, $query)) {
+        mysqli_stmt_bind_param($stmt, "s", $username);
+        mysqli_stmt_execute($stmt);
+        if(!mysqli_stmt_fetch($stmt)){
+            mysqli_stmt_close($stmt);
+            mysqli_close($link);
+            die("Account does not exist!");
+            exit(0);
+        }
+    }
+    mysqli_stmt_close($stmt);
+    // obtain current credits
+    $query_credits = "SELECT  user, points FROM players WHERE user=?";
+    $credit_stmt = mysqli_stmt_init($link);
+    if (mysqli_stmt_prepare($credit_stmt, $query_credits)) {
+        mysqli_stmt_bind_param($credit_stmt, "s", $username);
+        mysqli_stmt_execute($credit_stmt);
+
+        // bind shit to variables
+        mysqli_stmt_bind_result($credit_stmt, $usrname, $current_credits);
+
+        var_dump($current_credits);
+    }
+    mysqli_stmt_close($credit_stmt);
+
+    mysqli_close($link);
+    die($current_credits);
+    exit(0);
+}
+
+if ($_POST['action'] == 'withdraw') {
+    // Connect to database
+    $link = mysqli_connect(SQLServer, SQLUsername, SQLPassword, SQLDatabase);
+    if (!$link) {
+        error_log("Failed to connect to the database: " . mysqli_connect_error());
+        exit(0);
+    }
+
+    // In case players database doesnt exist (ie wasnt imported), make it.
+    $query = "CREATE TABLE IF NOT EXISTS players (  
+		user varchar(1000) NOT NULL, 
+		pass varchar(1000) NOT NULL, 
+		coin varchar(1000) default 'vertcoin' NOT NULL,
+		coin_address varchar(1000) NOT NULL, 
+		points int default 0 NOT NULL, 
+		UNIQUE KEY user (user))";
+    mysqli_query($link, $query);
+
+
+    //check if account exists
+    $query = "SELECT * FROM players WHERE user=?";
+    $stmt = mysqli_stmt_init($link);
+    if (mysqli_stmt_prepare($stmt, $query)) {
+        mysqli_stmt_bind_param($stmt, "s", $username);
+        mysqli_stmt_execute($stmt);
+        if(!mysqli_stmt_fetch($stmt)){
+            mysqli_stmt_close($stmt);
+            mysqli_close($link);
+            die("Account does not exist!");
+            exit(0);
+        }
+    }
+    mysqli_stmt_close($stmt);
+
+    // check if same password
+    $query_password = "SELECT  user, pass FROM players WHERE user=?";
+    $stmt = mysqli_stmt_init($link);
+    if (mysqli_stmt_prepare($stmt, $query_password)) {
+        mysqli_stmt_bind_param($stmt, "s", $username);
+        mysqli_stmt_execute($stmt);
+
+        // bind shit to variables
+        mysqli_stmt_bind_result($stmt, $usrname, $pw);
+
+        $User = mysqli_stmt_fetch($stmt);
+
+    }
+    mysqli_stmt_close($stmt);
+
+    $validPassword = password_verify($password, $pw);
+    if($validPassword){
+        //All is good. Withdraw.
+
+        // todo: figure out how to grab INT's from SQL as php variables
+
+        mysqli_close($link);
+        die("Successfully Withdrawn");
+        exit(0);
+    }else {
+        mysqli_close($link);
+        die("Invalid Account Details");
+        exit(0);
+    }
 }
