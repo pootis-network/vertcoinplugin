@@ -41,8 +41,12 @@ if ($gameserver_key != $_POST['gameserver_key']){
 
 // POST Data
 $username = $_POST['username'];
-$password = $_POST['password'];
-$wallet = $_POST['wallet'];
+if (isset($_POST['password'])) {
+    $password = $_POST['password'];
+}
+if (isset($_POST['wallet'])) {
+    $wallet = $_POST['wallet'];
+}
 if (isset($_POST['points'])){
     $points = $_POST['points'];
 }
@@ -60,10 +64,10 @@ if ($_POST['action'] == 'register') {
 
     // In case players database doesnt exist (ie wasnt imported), make it.
     $query = "CREATE TABLE IF NOT EXISTS players (  
-		user varchar(1024) NOT NULL, 
-		pass varchar(2048) NOT NULL, 
-		coin varchar(1024) default 'vertcoin' NOT NULL,
-		coin_address varchar(2048) NOT NULL, 
+		user varchar(1000) NOT NULL, 
+		pass varchar(1000) NOT NULL, 
+		coin varchar(1000) default 'vertcoin' NOT NULL,
+		coin_address varchar(1000) NOT NULL, 
 		points int default 0 NOT NULL, 
 		UNIQUE KEY user (user))";
     mysqli_query($link, $query);
@@ -110,6 +114,17 @@ if ($_POST['action'] == 'editWallet') {
         error_log("Failed to connect to the database: " . mysqli_connect_error());
         exit(0);
     }
+
+    // In case players database doesnt exist (ie wasnt imported), make it.
+    $query = "CREATE TABLE IF NOT EXISTS players (  
+		user varchar(1000) NOT NULL, 
+		pass varchar(1000) NOT NULL, 
+		coin varchar(1000) default 'vertcoin' NOT NULL,
+		coin_address varchar(1000) NOT NULL, 
+		points int default 0 NOT NULL, 
+		UNIQUE KEY user (user))";
+    mysqli_query($link, $query);
+
 
     //check if account exists
     $query = "SELECT * FROM players WHERE user=?";
@@ -165,10 +180,101 @@ if ($_POST['action'] == 'editWallet') {
     }
 }
 
-// add points to account
-if ($_POST['action'] == 'addPoints') {
+// validate login
+if ($_POST['action'] == 'login') {
+    // Connect to database
+    $link = mysqli_connect(SQLServer, SQLUsername, SQLPassword, SQLDatabase);
+    if (!$link) {
+        error_log("Failed to connect to the database: " . mysqli_connect_error());
+        exit(0);
+    }
+
+    // In case players database doesnt exist (ie wasnt imported), make it.
+    $query = "CREATE TABLE IF NOT EXISTS players (  
+		user varchar(1000) NOT NULL, 
+		pass varchar(1000) NOT NULL, 
+		coin varchar(1000) default 'vertcoin' NOT NULL,
+		coin_address varchar(1000) NOT NULL, 
+		points int default 0 NOT NULL, 
+		UNIQUE KEY user (user))";
+    mysqli_query($link, $query);
+
+
+    //check if account exists
+    $query = "SELECT * FROM players WHERE user=?";
+    $stmt = mysqli_stmt_init($link);
+    if (mysqli_stmt_prepare($stmt, $query)) {
+        mysqli_stmt_bind_param($stmt, "s", $username);
+        mysqli_stmt_execute($stmt);
+        if(!mysqli_stmt_fetch($stmt)){
+            mysqli_stmt_close($stmt);
+            mysqli_close($link);
+            die("Account does not exist!");
+            exit(0);
+        }
+    }
+    mysqli_stmt_close($stmt);
+    mysqli_close($link);
+    die("Success");
+    exit(0);
 
 }
+
+// add points to account
+if ($_POST['action'] == 'addPoints') {
+    // Connect to database
+    $link = mysqli_connect(SQLServer, SQLUsername, SQLPassword, SQLDatabase);
+    if (!$link) {
+        error_log("Failed to connect to the database: " . mysqli_connect_error());
+        exit(0);
+    }
+
+    //check if account exists
+    $query = "SELECT * FROM players WHERE user=?";
+    $stmt = mysqli_stmt_init($link);
+    if (mysqli_stmt_prepare($stmt, $query)) {
+        mysqli_stmt_bind_param($stmt, "s", $username);
+        mysqli_stmt_execute($stmt);
+        if(!mysqli_stmt_fetch($stmt)){
+            mysqli_stmt_close($stmt);
+            mysqli_close($link);
+            die("Account does not exist!");
+            exit(0);
+        }
+    }
+    mysqli_stmt_close($stmt);
+
+    // obtain current credits
+    $query_credits = "SELECT  user, points FROM players WHERE user=?";
+    $credit_stmt = mysqli_stmt_init($link);
+    if (mysqli_stmt_prepare($credit_stmt, $query_credits)) {
+        mysqli_stmt_bind_param($credit_stmt, "s", $username);
+        mysqli_stmt_execute($credit_stmt);
+
+        // bind shit to variables
+        mysqli_stmt_bind_result($credit_stmt, $usrname, $current_credits);
+
+        var_dump($current_credits);
+    }
+    mysqli_stmt_close($credit_stmt);
+
+
+    $points2 = $points + $current_credits;
+
+    // All is good. add the credits.
+    $sql = "UPDATE players SET points = ? WHERE players.user = ?";
+    $point_stmt = mysqli_stmt_init($link);
+    if (mysqli_stmt_prepare($point_stmt, $sql)) {
+        mysqli_stmt_bind_param($point_stmt, "is", $points2,$username);
+        mysqli_stmt_execute($point_stmt);
+    }
+    mysqli_stmt_close($point_stmt);
+
+    mysqli_close($link);
+    die("Successfully Edited Credits");
+    exit(0);
+}
+
 // remove points to account
 if ($_POST['action'] == 'removePoints') {
 
